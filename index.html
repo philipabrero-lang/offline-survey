@@ -36,8 +36,10 @@
     <form id="surveyForm">
       <label for="name">Name:</label>
       <input type="text" id="name" name="name" required>
+
       <label for="age">Age:</label>
       <input type="number" id="age" name="age" min="1" max="150" required>
+
       <label for="gender">Gender:</label>
       <select id="gender" name="gender" required>
         <option value="">Select Gender</option>
@@ -45,18 +47,39 @@
         <option value="Female">Female</option>
         <option value="Other">Other</option>
       </select>
+
+      <!-- New Ice Cream Brand Logic -->
+      <label for="brand">Ice Cream Brand:</label>
+      <select id="brand" name="brand" required>
+        <option value="">Select a brand</option>
+        <option value="Selecta">Selecta</option>
+        <option value="Aice">Aice</option>
+      </select>
+
+      <div id="selectaSection" style="display:none;">
+        <label for="selectaFlavor">Favorite Selecta Flavor:</label>
+        <input type="text" id="selectaFlavor" name="selectaFlavor" placeholder="e.g. Cookies and Cream">
+      </div>
+
+      <div id="aiceSection" style="display:none;">
+        <label for="aiceFlavor">Favorite Aice Flavor:</label>
+        <input type="text" id="aiceFlavor" name="aiceFlavor" placeholder="e.g. Choco Milk Stick">
+      </div>
+
       <button type="submit">💾 Save Data (Local)</button>
       <button type="button" id="syncBtn" class="sync-btn">☁️ Sync to Google Sheets</button>
     </form>
+
     <div id="statusMessage"></div>
+
     <div id="offlineData">
       <h2>Locally Saved Data (<span id="entryCount">0</span>)</h2>
       <ul id="dataList"></ul>
       <button type="button" id="clearLocalBtn" class="clear-btn">🗑️ Clear Local Data</button>
     </div>
   </div>
+
   <script>
-    // Palitan mo ito ng iyong actual Apps Script Web App URL na tested mo!
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOyRrpsXBXDT-7rEa_PfbLU5UU9oHYkLPHk0EMEo7cvntmpMBl_EvkUL0_jimCMIfhFA/exec';
     
     const surveyForm = document.getElementById('surveyForm');
@@ -67,6 +90,30 @@
     const entryCount = document.getElementById('entryCount');
     const onlineStatus = document.getElementById('onlineStatus');
     let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries')) || [];
+
+    // --- Brand Selection Logic ---
+    const brandSelect = document.getElementById('brand');
+    const selectaSection = document.getElementById('selectaSection');
+    const aiceSection = document.getElementById('aiceSection');
+
+    brandSelect.addEventListener('change', function() {
+      const value = brandSelect.value;
+      if (value === "Selecta") {
+        selectaSection.style.display = "block";
+        aiceSection.style.display = "none";
+        document.getElementById('aiceFlavor').value = "";
+      } else if (value === "Aice") {
+        aiceSection.style.display = "block";
+        selectaSection.style.display = "none";
+        document.getElementById('selectaFlavor').value = "";
+      } else {
+        selectaSection.style.display = "none";
+        aiceSection.style.display = "none";
+        document.getElementById('aiceFlavor').value = "";
+        document.getElementById('selectaFlavor').value = "";
+      }
+    });
+
     function updateOnlineStatus() {
       if (navigator.onLine) {
         onlineStatus.textContent = '🟢 Online - You can sync data to Google Sheets';
@@ -76,6 +123,7 @@
         onlineStatus.className = 'online-status offline';
       }
     }
+
     function displayOfflineData() {
       dataList.innerHTML = '';
       entryCount.textContent = offlineEntries.length;
@@ -84,26 +132,33 @@
       } else {
         offlineEntries.forEach((entry, index) => {
           const li = document.createElement('li');
-          li.innerHTML = `<span>${entry.name}, ${entry.age}, ${entry.gender}</span>
+          li.innerHTML = `<span>${entry.name}, ${entry.age}, ${entry.gender}, ${entry.brand}</span>
             <button data-index="${index}">Delete</button>`;
           dataList.appendChild(li);
         });
       }
     }
+
     surveyForm.addEventListener('submit', function(e) {
       e.preventDefault();
       const newEntry = {
         name: document.getElementById('name').value,
         age: document.getElementById('age').value,
         gender: document.getElementById('gender').value,
+        brand: document.getElementById('brand').value,
+        selectaFlavor: document.getElementById('selectaFlavor').value,
+        aiceFlavor: document.getElementById('aiceFlavor').value,
         timestamp: new Date().toISOString()
       };
       offlineEntries.push(newEntry);
       localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
       displayStatus('✅ Data saved locally!', 'success');
       surveyForm.reset();
+      selectaSection.style.display = "none";
+      aiceSection.style.display = "none";
       displayOfflineData();
     });
+
     syncBtn.addEventListener('click', async function() {
       if (offlineEntries.length === 0) {
         displayStatus('⚠️ No offline data to sync.', 'error');
@@ -119,14 +174,16 @@
       for (const entry of offlineEntries) {
         try {
           const formData = new URLSearchParams();
-          // Dapat sakto ang field names na ito
           formData.append('name', entry.name);
           formData.append('age', entry.age);
           formData.append('gender', entry.gender);
+          formData.append('brand', entry.brand);
+          formData.append('selectaFlavor', entry.selectaFlavor);
+          formData.append('aiceFlavor', entry.aiceFlavor);
           formData.append('timestamp', entry.timestamp || new Date().toISOString());
           await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // note: for production, use 'no-cors', but for debugging, pwede tanggalin para makita errors!
+            mode: 'no-cors',
             body: formData
           });
           successfulSyncs.push(entry);
@@ -145,6 +202,7 @@
       }
       syncBtn.disabled = false;
     });
+
     dataList.addEventListener('click', function(e) {
       if (e.target && e.target.nodeName === 'BUTTON') {
         const indexToDelete = parseInt(e.target.dataset.index);
@@ -154,6 +212,7 @@
         displayStatus('🗑️ Entry deleted locally.', 'info');
       }
     });
+
     clearLocalBtn.addEventListener('click', function() {
       if (confirm('Are you sure you want to clear all locally saved data?')) {
         offlineEntries = [];
@@ -162,6 +221,7 @@
         displayStatus('🗑️ All local data cleared.', 'info');
       }
     });
+
     function displayStatus(message, type) {
       statusMessage.textContent = message;
       statusMessage.className = `status ${type}`;
@@ -170,8 +230,10 @@
         statusMessage.className = '';
       }, 5000);
     }
+
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -183,6 +245,7 @@
           });
       });
     }
+
     updateOnlineStatus();
     displayOfflineData();
   </script>
