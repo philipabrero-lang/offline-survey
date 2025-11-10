@@ -260,7 +260,7 @@ surveyForm.addEventListener('submit', (e) => {
   productsContainer.innerHTML='';
 });
 
-/* Build entry */
+/* Build entry: only checked products with price! */
 function buildEntryFromForm(){
   const name = document.getElementById('name').value;
   const age = document.getElementById('age').value;
@@ -274,7 +274,9 @@ function buildEntryFromForm(){
     const checked = item.querySelector('.prod-check').checked;
     const priceEl = item.querySelector('.prod-price');
     const price = priceEl.value || '';
-    productEntries.push({ product: key, available: !!checked, price: price });
+    if (checked) { // Only push checked items!
+      productEntries.push({ product: key, price: price });
+    }
   });
   return { name, age, gender, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
 }
