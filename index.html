@@ -1,253 +1,361 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#4CAF50">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#4CAF50" />
   <title>Offline Survey Form</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="manifest.json" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-    .container { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 500px; margin:auto;}
-    label { display:block; margin-bottom:5px; font-weight:bold;}
-    input[type="text"], input[type="number"], select { width:calc(100% - 22px); padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:4px;}
-    button { background-color:#4CAF50; color:white; padding:10px 15px; border:none; border-radius:4px; cursor:pointer; font-size:16px; margin-right:10px;}
-    button:hover { background-color:#45a049;}
-    #statusMessage { margin-top:15px; padding:10px; border-radius:4px;}
-    .success { background-color:#d4edda; color:#155724; border:1px solid #c3e6cb;}
-    .error { background-color:#f8d7da; color:#721c24; border:1px solid #f5c6cb;}
-    .info { background-color:#d1ecf1; color:#0c5460; border:1px solid #bee5eb;}
-    #offlineData { margin-top:20px; border-top:1px solid #eee; padding-top:15px;}
-    #offlineData ul { list-style-type:none; padding:0;}
-    #offlineData li { background-color:#e9ecef; padding:10px; margin-bottom:5px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;}
-    #offlineData li button { background-color:#dc3545; padding:5px 10px; font-size:12px;}
-    #offlineData li button:hover { background-color:#c82333;}
-    .sync-btn{background-color:#007bff;} .sync-btn:hover{background-color:#0056b3;}
-    .clear-btn{background-color:#6c757d;} .clear-btn:hover{background-color:#5a6268;}
-    .online-status{text-align:center; padding:10px; margin-bottom:15px; border-radius:4px; font-weight:bold;}
-    .online{background-color:#d4edda; color:#155724;}
-    .offline{background-color:#f8d7da; color:#721c24;}
+    body {font-family: Arial, sans-serif; margin:20px; background:#f4f4f4;}
+    .container{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    label{display:block;margin-top:10px;font-weight:600}
+    input[type=text], input[type=number], select, textarea{width:100%;padding:10px;margin-top:6px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box}
+    button{margin-top:12px;padding:10px 14px;border-radius:6px;border:0;background:#007bff;color:#fff;cursor:pointer}
+    .btn-secondary{background:#28a745}
+    .inline{display:flex;gap:8px;align-items:center}
+    .products-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;margin-top:8px}
+    .product-item{background:#f8f9fa;padding:10px;border-radius:6px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .small{width:110px}
+    .thumb{max-width:140px;max-height:140px;border:1px solid #ddd;border-radius:6px;margin-top:8px}
+    .status{margin-top:10px;padding:10px;border-radius:6px}
+    .success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    h2{margin-top:18px}
+    .camera-wrap{display:flex;gap:12px;flex-wrap:wrap}
+    video{width:240px;height:180px;border:1px solid #ddd;border-radius:6px;background:#000}
+    canvas{display:none}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>📋 Offline Survey Form</h1>
-    <div id="onlineStatus" class="online-status"></div>
+
+    <div id="onlineStatus" class="status"></div>
+
     <form id="surveyForm">
-      <label for="name">Name:</label>
-      <input type="text" id="name" name="name" required>
+      <label>Name</label>
+      <input id="name" type="text" required />
 
-      <label for="age">Age:</label>
-      <input type="number" id="age" name="age" min="1" max="150" required>
+      <label>Age</label>
+      <input id="age" type="number" min="1" max="150" required />
 
-      <label for="gender">Gender:</label>
-      <select id="gender" name="gender" required>
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
+      <label>Gender</label>
+      <select id="gender" required>
+        <option value="">Select</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
       </select>
 
-      <!-- New Ice Cream Brand Logic -->
-      <label for="brand">Ice Cream Brand:</label>
-      <select id="brand" name="brand" required>
-        <option value="">Select a brand</option>
+      <label>What Brand</label>
+      <select id="brand" required>
+        <option value="">Select Brand</option>
         <option value="Selecta">Selecta</option>
         <option value="Aice">Aice</option>
       </select>
 
-      <div id="selectaSection" style="display:none;">
-        <label for="selectaFlavor">Favorite Selecta Flavor:</label>
-        <input type="text" id="selectaFlavor" name="selectaFlavor" placeholder="e.g. Cookies and Cream">
+      <label>Store Name</label>
+      <select id="storeName" required>
+        <option value="">Select store</option>
+      </select>
+
+      <h2>Q2. Is the product available? (check and add price)</h2>
+      <div id="productsContainer" class="products-grid"></div>
+
+      <h2>Store Photo</h2>
+      <div class="camera-wrap">
+        <div>
+          <video id="storeVideo" autoplay playsinline></video>
+          <canvas id="storeCanvas"></canvas>
+          <div>
+            <button type="button" id="storeStartBtn">Start Camera</button>
+            <button type="button" id="storeCaptureBtn">Capture</button>
+          </div>
+          <div><input id="storeFileInput" type="file" accept="image/*" capture="environment"></div>
+          <img id="storeThumb" class="thumb" alt="store photo preview" />
+        </div>
+
+        <div>
+          <h3>Cabinet Photo</h3>
+          <video id="cabVideo" autoplay playsinline></video>
+          <canvas id="cabCanvas"></canvas>
+          <div>
+            <button type="button" id="cabStartBtn">Start Camera</button>
+            <button type="button" id="cabCaptureBtn">Capture</button>
+          </div>
+          <div><input id="cabFileInput" type="file" accept="image/*" capture="environment"></div>
+          <img id="cabThumb" class="thumb" alt="cabinet photo preview" />
+        </div>
       </div>
 
-      <div id="aiceSection" style="display:none;">
-        <label for="aiceFlavor">Favorite Aice Flavor:</label>
-        <input type="text" id="aiceFlavor" name="aiceFlavor" placeholder="e.g. Choco Milk Stick">
+      <div style="margin-top:12px">
+        <button type="submit" class="btn-secondary">💾 Save Data (Local)</button>
+        <button type="button" id="syncBtn">☁️ Sync to Google Sheets</button>
       </div>
-
-      <button type="submit">💾 Save Data (Local)</button>
-      <button type="button" id="syncBtn" class="sync-btn">☁️ Sync to Google Sheets</button>
     </form>
 
-    <div id="statusMessage"></div>
+    <div id="statusMessage" class="status"></div>
 
-    <div id="offlineData">
-      <h2>Locally Saved Data (<span id="entryCount">0</span>)</h2>
-      <ul id="dataList"></ul>
-      <button type="button" id="clearLocalBtn" class="clear-btn">🗑️ Clear Local Data</button>
-    </div>
+    <h2>Locally Saved Data (<span id="entryCount">0</span>)</h2>
+    <ul id="dataList"></ul>
+    <button id="clearLocalBtn" style="background:#6c757d">Clear Local Data</button>
   </div>
 
-  <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOyRrpsXBXDT-7rEa_PfbLU5UU9oHYkLPHk0EMEo7cvntmpMBl_EvkUL0_jimCMIfhFA/exec';
-    
-    const surveyForm = document.getElementById('surveyForm');
-    const syncBtn = document.getElementById('syncBtn');
-    const clearLocalBtn = document.getElementById('clearLocalBtn');
-    const statusMessage = document.getElementById('statusMessage');
-    const dataList = document.getElementById('dataList');
-    const entryCount = document.getElementById('entryCount');
-    const onlineStatus = document.getElementById('onlineStatus');
-    let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries')) || [];
+<script>
+/* ========== CONFIG ========== */
+/* Replace with your deployed Apps Script Web App URL (ends with /exec) */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOyRrpsX.../exec';
+/* ========== END CONFIG ========== */
 
-    // --- Brand Selection Logic ---
-    const brandSelect = document.getElementById('brand');
-    const selectaSection = document.getElementById('selectaSection');
-    const aiceSection = document.getElementById('aiceSection');
+const brandStores = {
+  "Selecta":[
+    "R-JAY STORE","AZORES EASTERY","CJ and AJ STORE","CAI VARIETY STORE","DRC SCHOOL SUPPLIES",
+    "JHONNEL VAREITY STORE","KEANS STORE","KIM AND J STORE","OHH--SAINT BERNADETTE STORE","MLR STORE"
+  ],
+  "Aice":[
+    "MLR STORE","CAI VARIETY STORE","R-JAY STORE","JHONNEL VARIETY STORE","RBKAH STORE",
+    "MJ PEREZ","BEVERLY STORE","BOOGIE STORE","TESS STORE","DADAY BURGER"
+  ]
+};
 
-    brandSelect.addEventListener('change', function() {
-      const value = brandSelect.value;
-      if (value === "Selecta") {
-        selectaSection.style.display = "block";
-        aiceSection.style.display = "none";
-        document.getElementById('aiceFlavor').value = "";
-      } else if (value === "Aice") {
-        aiceSection.style.display = "block";
-        selectaSection.style.display = "none";
-        document.getElementById('selectaFlavor').value = "";
-      } else {
-        selectaSection.style.display = "none";
-        aiceSection.style.display = "none";
-        document.getElementById('aiceFlavor').value = "";
-        document.getElementById('selectaFlavor').value = "";
-      }
-    });
+const productsList = {
+  "Selecta":[
+    "CHOKY","WATERMELON SLICE","ICE POP BERRY CHOCO","ICE POP MILKY CHOCO","RAINBOW POP",
+    "BOOM BOOM CHOCO","BOOM BOOM COOKIES AND CREAM","CRUNCHY MAX CHOCOLATE","WONDER WAFFLE",
+    "CHOCO CUP","UBE CUP","MANGO CUP","DOUBLE CHOCO SUNDAE","BITES TIME! VANILLA TOFFEE CARAMEL",
+    "CORNETTO CHOCOLATE","CORNETTO COOKIES AND CREAM","CORNETTO VANILLA"
+  ],
+  "Aice":[
+    "MILK STICK","CHOCOLATE STICK","WATERMELON SLICE","PINEAPPLE SLICE","JERUK SLICE / ORANGE SLICE",
+    "MIKI MIKI CHOCOLATE","MIKI MIKI VANILLA","CHOCO MALT","CHECKERED STICK / 2 COLOR STICK",
+    "MELON STICK"
+  ]
+};
 
-    function updateOnlineStatus() {
-      if (navigator.onLine) {
-        onlineStatus.textContent = '🟢 Online - You can sync data to Google Sheets';
-        onlineStatus.className = 'online-status online';
-      } else {
-        onlineStatus.textContent = '🔴 Offline - Data will be saved locally';
-        onlineStatus.className = 'online-status offline';
-      }
-    }
+/* ====== UI elements ====== */
+const onlineStatus = document.getElementById('onlineStatus');
+const brandEl = document.getElementById('brand');
+const storeNameEl = document.getElementById('storeName');
+const productsContainer = document.getElementById('productsContainer');
+const surveyForm = document.getElementById('surveyForm');
+const statusMessage = document.getElementById('statusMessage');
+const dataList = document.getElementById('dataList');
+const entryCount = document.getElementById('entryCount');
+const syncBtn = document.getElementById('syncBtn');
+const clearLocalBtn = document.getElementById('clearLocalBtn');
 
-    function displayOfflineData() {
-      dataList.innerHTML = '';
-      entryCount.textContent = offlineEntries.length;
-      if (offlineEntries.length === 0) {
-        dataList.innerHTML = '<li>No data saved locally.</li>';
-      } else {
-        offlineEntries.forEach((entry, index) => {
-          const li = document.createElement('li');
-          li.innerHTML = `<span>${entry.name}, ${entry.age}, ${entry.gender}, ${entry.brand}</span>
-            <button data-index="${index}">Delete</button>`;
-          dataList.appendChild(li);
-        });
-      }
-    }
+let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries') || '[]');
 
-    surveyForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const newEntry = {
-        name: document.getElementById('name').value,
-        age: document.getElementById('age').value,
-        gender: document.getElementById('gender').value,
-        brand: document.getElementById('brand').value,
-        selectaFlavor: document.getElementById('selectaFlavor').value,
-        aiceFlavor: document.getElementById('aiceFlavor').value,
-        timestamp: new Date().toISOString()
-      };
-      offlineEntries.push(newEntry);
-      localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
-      displayStatus('✅ Data saved locally!', 'success');
-      surveyForm.reset();
-      selectaSection.style.display = "none";
-      aiceSection.style.display = "none";
-      displayOfflineData();
-    });
+/* Camera elements */
+function camEl(id){ return document.getElementById(id) }
+const storeVideo = camEl('storeVideo'), storeCanvas = camEl('storeCanvas'), storeThumb = camEl('storeThumb');
+const cabVideo = camEl('cabVideo'), cabCanvas = camEl('cabCanvas'), cabThumb = camEl('cabThumb');
+const storeFileInput = camEl('storeFileInput'), cabFileInput = camEl('cabFileInput');
 
-    syncBtn.addEventListener('click', async function() {
-      if (offlineEntries.length === 0) {
-        displayStatus('⚠️ No offline data to sync.', 'error');
-        return;
-      }
-      if (!navigator.onLine) {
-        displayStatus('⚠️ You are offline. Please connect to the internet to sync.', 'error');
-        return;
-      }
-      displayStatus('⏳ Syncing data to Google Sheets...', 'info');
-      syncBtn.disabled = true;
-      const successfulSyncs = [], failedSyncs = [];
-      for (const entry of offlineEntries) {
-        try {
-          const formData = new URLSearchParams();
-          formData.append('name', entry.name);
-          formData.append('age', entry.age);
-          formData.append('gender', entry.gender);
-          formData.append('brand', entry.brand);
-          formData.append('selectaFlavor', entry.selectaFlavor);
-          formData.append('aiceFlavor', entry.aiceFlavor);
-          formData.append('timestamp', entry.timestamp || new Date().toISOString());
-          await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: formData
-          });
-          successfulSyncs.push(entry);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-          failedSyncs.push(entry);
-        }
-      }
-      offlineEntries = failedSyncs;
-      localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
-      displayOfflineData();
-      if (successfulSyncs.length > 0) {
-        displayStatus(`✅ Successfully synced ${successfulSyncs.length} entries${failedSyncs.length>0 ? ', ❌ '+failedSyncs.length+' failed.' : ' to Google Sheets!'}`, 'success');
-      } else {
-        displayStatus('❌ No entries successfully synced. Check console for errors.', 'error');
-      }
-      syncBtn.disabled = false;
-    });
+let storeStream = null, cabStream = null;
+let storeDataURL = "", cabDataURL = "";
 
-    dataList.addEventListener('click', function(e) {
-      if (e.target && e.target.nodeName === 'BUTTON') {
-        const indexToDelete = parseInt(e.target.dataset.index);
-        offlineEntries.splice(indexToDelete, 1);
-        localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
-        displayOfflineData();
-        displayStatus('🗑️ Entry deleted locally.', 'info');
-      }
-    });
+/* ====== helpers ====== */
+function updateOnlineStatus() {
+  if (navigator.onLine){
+    onlineStatus.textContent = '🟢 Online - You can sync data to Google Sheets';
+    onlineStatus.style.background='#d4edda'; onlineStatus.style.color='#155724';
+  } else {
+    onlineStatus.textContent = '🔴 Offline - Data will be saved locally';
+    onlineStatus.style.background='#f8d7da'; onlineStatus.style.color='#721c24';
+  }
+}
+function displayStatus(msg,type){ statusMessage.textContent = msg; statusMessage.className = 'status ' + (type||'info'); setTimeout(()=>{ statusMessage.textContent=''; statusMessage.className=''; },6000) }
 
-    clearLocalBtn.addEventListener('click', function() {
-      if (confirm('Are you sure you want to clear all locally saved data?')) {
-        offlineEntries = [];
-        localStorage.removeItem('offlineEntries');
-        displayOfflineData();
-        displayStatus('🗑️ All local data cleared.', 'info');
-      }
-    });
+/* populate stores when brand changes */
+brandEl.addEventListener('change', () => {
+  const b = brandEl.value;
+  storeNameEl.innerHTML = '<option value="">Select store</option>';
+  productsContainer.innerHTML = '';
+  if (!b) return;
+  (brandStores[b] || []).forEach(s => {
+    const opt = document.createElement('option'); opt.value = s; opt.textContent = s; storeNameEl.appendChild(opt);
+  });
+  renderProducts(b);
+});
 
-    function displayStatus(message, type) {
-      statusMessage.textContent = message;
-      statusMessage.className = `status ${type}`;
-      setTimeout(() => {
-        statusMessage.textContent = '';
-        statusMessage.className = '';
-      }, 5000);
-    }
+function renderProducts(brand){
+  productsContainer.innerHTML = '';
+  const list = productsList[brand] || [];
+  list.forEach((p, i) => {
+    const item = document.createElement('div'); item.className='product-item';
+    item.innerHTML = `
+      <div style="flex:1"><label><input type="checkbox" class="prod-check" data-key="${p}"> ${p}</label></div>
+      <div style="width:150px;display:flex;gap:6px;align-items:center">
+        <input class="prod-price small" data-key="${p}" type="number" step="0.01" placeholder="price" />
+      </div>
+    `;
+    productsContainer.appendChild(item);
+  });
+}
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+/* camera functions - start, capture, file fallback */
+async function startCameraFor(videoEl){
+  try{
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    videoEl.srcObject = s;
+    return s;
+  }catch(err){
+    console.warn('camera start error', err);
+    return null;
+  }
+}
+function captureFromVideo(videoEl, canvasEl){
+  const w = videoEl.videoWidth || 640, h = videoEl.videoHeight || 480;
+  canvasEl.width = w; canvasEl.height = h;
+  const ctx = canvasEl.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0, w, h);
+  return canvasEl.toDataURL('image/jpeg', 0.8);
+}
 
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('Service Worker registered successfully:', registration.scope);
-          })
-          .catch((error) => {
-            console.log('Service Worker registration failed:', error);
-          });
+/* wire camera UI */
+document.getElementById('storeStartBtn').addEventListener('click', async () => {
+  if (!storeStream) storeStream = await startCameraFor(storeVideo);
+});
+document.getElementById('storeCaptureBtn').addEventListener('click', () => {
+  if (storeVideo.srcObject) storeDataURL = captureFromVideo(storeVideo, storeCanvas);
+  storeThumb.src = storeDataURL || '';
+});
+document.getElementById('cabStartBtn').addEventListener('click', async () => {
+  if (!cabStream) cabStream = await startCameraFor(cabVideo);
+});
+document.getElementById('cabCaptureBtn').addEventListener('click', () => {
+  if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas);
+  cabThumb.src = cabDataURL || '';
+});
+
+/* file input fallback */
+storeFileInput.addEventListener('change', (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { storeDataURL = r.result; storeThumb.src = storeDataURL; };
+  r.readAsDataURL(f);
+});
+cabFileInput.addEventListener('change', (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { cabDataURL = r.result; cabThumb.src = cabDataURL; };
+  r.readAsDataURL(f);
+});
+
+/* save locally */
+surveyForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const entry = buildEntryFromForm();
+  offlineEntries.push(entry);
+  localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
+  displayStatus('✅ Data saved locally', 'success');
+  renderLocalList();
+  surveyForm.reset();
+  // clear store/cab images
+  storeThumb.src=''; cabThumb.src=''; storeDataURL=''; cabDataURL='';
+  productsContainer.innerHTML='';
+});
+
+/* build entry */
+function buildEntryFromForm(){
+  const name = document.getElementById('name').value;
+  const age = document.getElementById('age').value;
+  const gender = document.getElementById('gender').value;
+  const brand = brandEl.value;
+  const storeName = storeNameEl.value;
+  const timestamp = new Date().toISOString();
+  const productEntries = [];
+  document.querySelectorAll('.product-item').forEach(item => {
+    const key = item.querySelector('.prod-check').dataset.key;
+    const checked = item.querySelector('.prod-check').checked;
+    const priceEl = item.querySelector('.prod-price');
+    const price = priceEl.value || '';
+    productEntries.push({ product: key, available: !!checked, price: price });
+  });
+  return { name, age, gender, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
+}
+
+/* display local list */
+function renderLocalList(){
+  dataList.innerHTML = '';
+  entryCount.textContent = offlineEntries.length;
+  if (offlineEntries.length === 0) {
+    dataList.innerHTML = '<li>No data saved locally.</li>';
+    return;
+  }
+  offlineEntries.forEach((entry, idx) => {
+    const li = document.createElement('li');
+    li.style.padding = '8px'; li.style.marginBottom = '6px'; li.style.background='#eef';
+    li.innerHTML = `<strong>${entry.name}</strong> — ${entry.age} — ${entry.brand} — ${entry.storeName}
+      <div style="margin-top:4px">
+        <button data-idx="${idx}" class="delBtn" style="background:#dc3545;color:#fff;border:0;padding:6px;border-radius:6px">Delete</button>
+      </div>`;
+    dataList.appendChild(li);
+  });
+}
+dataList.addEventListener('click', (e) => {
+  if (e.target.classList.contains('delBtn')) {
+    const idx = parseInt(e.target.dataset.idx);
+    offlineEntries.splice(idx,1);
+    localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
+    renderLocalList();
+    displayStatus('Entry deleted', 'info');
+  }
+});
+clearLocalBtn.addEventListener('click', () => {
+  if (!confirm('Clear all local entries?')) return;
+  offlineEntries = []; localStorage.removeItem('offlineEntries'); renderLocalList(); displayStatus('Cleared', 'info');
+});
+
+/* sync logic (send JSON payload to Apps Script) */
+syncBtn.addEventListener('click', async () => {
+  if (offlineEntries.length === 0) { displayStatus('No offline data to sync', 'error'); return; }
+  if (!navigator.onLine) { displayStatus('Offline — connect to internet to sync', 'error'); return; }
+  displayStatus('⏳ Syncing...', 'info');
+  syncBtn.disabled = true;
+  const successful = [], failed = [];
+  for (const entry of offlineEntries) {
+    try {
+      // send JSON directly
+      const resp = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
       });
+      const text = await resp.text();
+      // try parse
+      let json = null;
+      try{ json = JSON.parse(text); }catch(e){ json = { ok: true, raw: text }; }
+      if (resp.ok) {
+        successful.push(entry);
+      } else {
+        failed.push(entry);
+        console.warn('sync error', resp.status, text);
+      }
+      await new Promise(r => setTimeout(r, 400)); // slight delay
+    } catch (err) {
+      console.error('sync exception', err);
+      failed.push(entry);
     }
+  }
+  offlineEntries = failed;
+  localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
+  renderLocalList();
+  if (successful.length) displayStatus(`✅ Successfully synced ${successful.length} entries`, 'success');
+  else displayStatus('❌ No entries synced. Check console or Apps Script executions', 'error');
+  syncBtn.disabled = false;
+});
 
-    updateOnlineStatus();
-    displayOfflineData();
-  </script>
+/* initial load */
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+renderLocalList();
+
+</script>
 </body>
 </html>
