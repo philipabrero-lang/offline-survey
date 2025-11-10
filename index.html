@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json" />
   <style>
     body {font-family: Arial, sans-serif; margin:20px; background:#f4f4f4;}
-    .container{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+    .container{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
     label{display:block;margin-top:10px;font-weight:600}
     input[type=text], input[type=number], select, textarea{width:100%;padding:10px;margin-top:6px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box}
     button{margin-top:12px;padding:10px 14px;border-radius:6px;border:0;background:#007bff;color:#fff;cursor:pointer}
@@ -17,14 +17,15 @@
     .products-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;margin-top:8px}
     .product-item{background:#f8f9fa;padding:10px;border-radius:6px;display:flex;gap:8px;align-items:center;justify-content:space-between}
     .small{width:110px}
-    .thumb{max-width:140px;max-height:140px;border:1px solid #ddd;border-radius:6px;margin-top:8px}
+    .thumb{max-width:220px;max-height:160px;border:1px solid #ddd;border-radius:6px;margin-top:8px}
     .status{margin-top:10px;padding:10px;border-radius:6px}
     .success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
     .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
     h2{margin-top:18px}
-    .camera-wrap{display:flex;gap:12px;flex-wrap:wrap}
-    video{width:240px;height:180px;border:1px solid #ddd;border-radius:6px;background:#000}
+    .camera-wrap{display:flex;gap:24px;flex-wrap:wrap}
+    video{width:320px;height:240px;border:1px solid #ddd;border-radius:6px;background:#000}
     canvas{display:none}
+    ul{padding-left:18px}
   </style>
 </head>
 <body>
@@ -99,15 +100,16 @@
 
     <h2>Locally Saved Data (<span id="entryCount">0</span>)</h2>
     <ul id="dataList"></ul>
-    <button id="clearLocalBtn" style="background:#6c757d">Clear Local Data</button>
+    <button id="clearLocalBtn" style="background:#6c757d;color:#fff;border:0;padding:10px;border-radius:6px">Clear Local Data</button>
   </div>
 
 <script>
 /* ========== CONFIG ========== */
-/* Replace with your deployed Apps Script Web App URL (ends with /exec) */
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOyRrpsXBXDT-7rEa_PfbLU5UU9oHYkLPHk0EMEo7cvntmpMBl_EvkUL0_jimCMIfhFA/exec';
+/* NEW Web App URL provided by you */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCEbZ6ngbl3oY8aBdXWGVoG2VTTNWwEi6KskawmpCq21Y_uctAWkoFkr3tee6oCJo5JA/exec';
 /* ========== END CONFIG ========== */
 
+/* Data lists (brand -> stores & products) */
 const brandStores = {
   "Selecta":[
     "R-JAY STORE","AZORES EASTERY","CJ and AJ STORE","CAI VARIETY STORE","DRC SCHOOL SUPPLIES",
@@ -133,7 +135,7 @@ const productsList = {
   ]
 };
 
-/* ====== UI elements ====== */
+/* UI elements */
 const onlineStatus = document.getElementById('onlineStatus');
 const brandEl = document.getElementById('brand');
 const storeNameEl = document.getElementById('storeName');
@@ -148,27 +150,30 @@ const clearLocalBtn = document.getElementById('clearLocalBtn');
 let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries') || '[]');
 
 /* Camera elements */
-function camEl(id){ return document.getElementById(id) }
-const storeVideo = camEl('storeVideo'), storeCanvas = camEl('storeCanvas'), storeThumb = camEl('storeThumb');
-const cabVideo = camEl('cabVideo'), cabCanvas = camEl('cabCanvas'), cabThumb = camEl('cabThumb');
-const storeFileInput = camEl('storeFileInput'), cabFileInput = camEl('cabFileInput');
+const storeVideo = document.getElementById('storeVideo'), storeCanvas = document.getElementById('storeCanvas'), storeThumb = document.getElementById('storeThumb');
+const cabVideo = document.getElementById('cabVideo'), cabCanvas = document.getElementById('cabCanvas'), cabThumb = document.getElementById('cabThumb');
+const storeFileInput = document.getElementById('storeFileInput'), cabFileInput = document.getElementById('cabFileInput');
 
 let storeStream = null, cabStream = null;
 let storeDataURL = "", cabDataURL = "";
 
-/* ====== helpers ====== */
+/* Helpers */
 function updateOnlineStatus() {
   if (navigator.onLine){
     onlineStatus.textContent = '🟢 Online - You can sync data to Google Sheets';
-    onlineStatus.style.background='#d4edda'; onlineStatus.style.color='#155724';
+    onlineStatus.className = 'status success';
   } else {
     onlineStatus.textContent = '🔴 Offline - Data will be saved locally';
-    onlineStatus.style.background='#f8d7da'; onlineStatus.style.color='#721c24';
+    onlineStatus.className = 'status error';
   }
 }
-function displayStatus(msg,type){ statusMessage.textContent = msg; statusMessage.className = 'status ' + (type||'info'); setTimeout(()=>{ statusMessage.textContent=''; statusMessage.className=''; },6000) }
+function displayStatus(msg, type) {
+  statusMessage.textContent = msg;
+  statusMessage.className = 'status ' + (type || '');
+  setTimeout(()=>{ statusMessage.textContent = ''; statusMessage.className = 'status'; }, 6000);
+}
 
-/* populate stores when brand changes */
+/* Populate stores when brand changes */
 brandEl.addEventListener('change', () => {
   const b = brandEl.value;
   storeNameEl.innerHTML = '<option value="">Select store</option>';
@@ -183,7 +188,7 @@ brandEl.addEventListener('change', () => {
 function renderProducts(brand){
   productsContainer.innerHTML = '';
   const list = productsList[brand] || [];
-  list.forEach((p, i) => {
+  list.forEach((p) => {
     const item = document.createElement('div'); item.className='product-item';
     item.innerHTML = `
       <div style="flex:1"><label><input type="checkbox" class="prod-check" data-key="${p}"> ${p}</label></div>
@@ -195,7 +200,7 @@ function renderProducts(brand){
   });
 }
 
-/* camera functions - start, capture, file fallback */
+/* Camera functions */
 async function startCameraFor(videoEl){
   try{
     const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
@@ -206,29 +211,25 @@ async function startCameraFor(videoEl){
     return null;
   }
 }
-function captureFromVideo(videoEl, canvasEl){
-  const w = videoEl.videoWidth || 640, h = videoEl.videoHeight || 480;
+function captureFromVideo(videoEl, canvasEl, maxWidth=1024){
+  const vw = videoEl.videoWidth || 1280;
+  const vh = videoEl.videoHeight || 720;
+  let scale = 1;
+  if (vw > maxWidth) scale = maxWidth / vw;
+  const w = Math.round(vw * scale);
+  const h = Math.round(vh * scale);
   canvasEl.width = w; canvasEl.height = h;
   const ctx = canvasEl.getContext('2d');
   ctx.drawImage(videoEl, 0, 0, w, h);
-  return canvasEl.toDataURL('image/jpeg', 0.8);
+  return canvasEl.toDataURL('image/jpeg', 0.75);
 }
 
 /* wire camera UI */
-document.getElementById('storeStartBtn').addEventListener('click', async () => {
-  if (!storeStream) storeStream = await startCameraFor(storeVideo);
-});
-document.getElementById('storeCaptureBtn').addEventListener('click', () => {
-  if (storeVideo.srcObject) storeDataURL = captureFromVideo(storeVideo, storeCanvas);
-  storeThumb.src = storeDataURL || '';
-});
-document.getElementById('cabStartBtn').addEventListener('click', async () => {
-  if (!cabStream) cabStream = await startCameraFor(cabVideo);
-});
-document.getElementById('cabCaptureBtn').addEventListener('click', () => {
-  if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas);
-  cabThumb.src = cabDataURL || '';
-});
+document.getElementById('storeStartBtn').addEventListener('click', async () => { if (!storeStream) storeStream = await startCameraFor(storeVideo); });
+document.getElementById('storeCaptureBtn').addEventListener('click', () => { if (storeVideo.srcObject) storeDataURL = captureFromVideo(storeVideo, storeCanvas); storeThumb.src = storeDataURL || ''; });
+
+document.getElementById('cabStartBtn').addEventListener('click', async () => { if (!cabStream) cabStream = await startCameraFor(cabVideo); });
+document.getElementById('cabCaptureBtn').addEventListener('click', () => { if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas); cabThumb.src = cabDataURL || ''; });
 
 /* file input fallback */
 storeFileInput.addEventListener('change', (ev) => {
@@ -246,7 +247,7 @@ cabFileInput.addEventListener('change', (ev) => {
   r.readAsDataURL(f);
 });
 
-/* save locally */
+/* Save locally */
 surveyForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const entry = buildEntryFromForm();
@@ -255,12 +256,11 @@ surveyForm.addEventListener('submit', (e) => {
   displayStatus('✅ Data saved locally', 'success');
   renderLocalList();
   surveyForm.reset();
-  // clear store/cab images
   storeThumb.src=''; cabThumb.src=''; storeDataURL=''; cabDataURL='';
   productsContainer.innerHTML='';
 });
 
-/* build entry */
+/* Build entry */
 function buildEntryFromForm(){
   const name = document.getElementById('name').value;
   const age = document.getElementById('age').value;
@@ -279,7 +279,7 @@ function buildEntryFromForm(){
   return { name, age, gender, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
 }
 
-/* display local list */
+/* Display local list */
 function renderLocalList(){
   dataList.innerHTML = '';
   entryCount.textContent = offlineEntries.length;
@@ -311,7 +311,9 @@ clearLocalBtn.addEventListener('click', () => {
   offlineEntries = []; localStorage.removeItem('offlineEntries'); renderLocalList(); displayStatus('Cleared', 'info');
 });
 
-/* sync logic (send JSON payload to Apps Script) */
+/* Sync logic (send JSON payload to Apps Script)
+   Note: DO NOT set custom headers to avoid preflight OPTIONS in many environments.
+*/
 syncBtn.addEventListener('click', async () => {
   if (offlineEntries.length === 0) { displayStatus('No offline data to sync', 'error'); return; }
   if (!navigator.onLine) { displayStatus('Offline — connect to internet to sync', 'error'); return; }
@@ -320,23 +322,24 @@ syncBtn.addEventListener('click', async () => {
   const successful = [], failed = [];
   for (const entry of offlineEntries) {
     try {
-      // send JSON directly
+      // compress large images further if present (already resized on capture)
+      // Send raw JSON string WITHOUT setting Content-Type header (helps avoid preflight in many cases)
       const resp = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(entry)
       });
       const text = await resp.text();
+      console.log('SYNC RESPONSE', resp.status, text);
       // try parse
       let json = null;
-      try{ json = JSON.parse(text); }catch(e){ json = { ok: true, raw: text }; }
+      try{ json = JSON.parse(text); }catch(e){ json = { ok: resp.ok, raw: text }; }
       if (resp.ok) {
         successful.push(entry);
       } else {
         failed.push(entry);
         console.warn('sync error', resp.status, text);
       }
-      await new Promise(r => setTimeout(r, 400)); // slight delay
+      await new Promise(r => setTimeout(r, 350)); // slight delay
     } catch (err) {
       console.error('sync exception', err);
       failed.push(entry);
@@ -350,13 +353,11 @@ syncBtn.addEventListener('click', async () => {
   syncBtn.disabled = false;
 });
 
-/* initial load */
+/* init */
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 renderLocalList();
-
 </script>
 </body>
 </html>
-
