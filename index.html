@@ -14,7 +14,6 @@
     button{margin-top:12px;padding:10px 14px;border-radius:6px;border:0;background:#007bff;color:#fff;cursor:pointer}
     .btn-secondary{background:#28a745}
     
-    /* NEW PRODUCT LAYOUT STYLES */
     .products-grid{display:flex;flex-direction:column;gap:12px;margin-top:12px}
     .product-item{
       background:#f8f9fa;
@@ -93,30 +92,25 @@
     <h1>📋 Offline Survey Form</h1>
     <div id="onlineStatus" class="status"></div>
     <form id="surveyForm">
-      <label>Name</label>
-      <input id="name" type="text" required />
-      <label>Age</label>
-      <input id="age" type="number" min="1" max="150" required />
-      <label>Gender</label>
-      <select id="gender" required>
-        <option value="">Select</option>
-        <option>Male</option>
-        <option>Female</option>
+      <label>Auditor Name</label>
+      <input id="auditorName" type="text" required />
+      
+      <label>Area</label>
+      <select id="area" required>
+        <option value="">Select Area</option>
+        <option value="Cavite">Cavite</option>
+        <option value="Bulacan">Bulacan</option>
       </select>
-      <label>What Ice Cream cabinet is available?</label>
-      <select id="brand" required>
-        <option value="">Select</option>
-        <option value="Selecta">Selecta</option>
-        <option value="Aice">Aice</option>
-        <option value="Both">Both</option>
+      
+      <label>Municipality</label>
+      <select id="municipality" required>
+        <option value="">Select Municipality</option>
       </select>
-      <label>Store Name</label>
-      <select id="storeName" required>
-        <option value="">Select store</option>
-      </select>
-      <h2>Q2. Is the product available? (check and add price)</h2>
-      <div id="productsContainer" class="products-grid"></div>
-      <h2>Store Photo</h2>
+      
+      <label>Barangay</label>
+      <input id="barangay" type="text" required />
+      
+      <h2>Take a Photo of Store</h2>
       <div class="camera-wrap">
         <div>
           <video id="storeVideo" autoplay playsinline></video>
@@ -125,21 +119,39 @@
             <button type="button" id="storeStartBtn">Start Camera</button>
             <button type="button" id="storeCaptureBtn">Capture</button>
           </div>
-          <div><input id="storeFileInput" type="file" accept="image/*" capture="environment"></div>
           <img id="storeThumb" class="thumb" alt="store photo preview" />
         </div>
+      </div>
+      
+      <label>What Ice Cream cabinet is available?</label>
+      <select id="brand" required>
+        <option value="">Select</option>
+        <option value="Selecta">Selecta</option>
+        <option value="Aice">Aice</option>
+        <option value="Both">Both</option>
+      </select>
+      
+      <label>Store Name</label>
+      <select id="storeName" required>
+        <option value="">Select store</option>
+      </select>
+      
+      <h2>Q2. Is the product available? (check and add price)</h2>
+      <div id="productsContainer" class="products-grid"></div>
+      
+      <h2>Cabinet Photo</h2>
+      <div class="camera-wrap">
         <div>
-          <h3>Cabinet Photo</h3>
           <video id="cabVideo" autoplay playsinline></video>
           <canvas id="cabCanvas"></canvas>
           <div>
             <button type="button" id="cabStartBtn">Start Camera</button>
             <button type="button" id="cabCaptureBtn">Capture</button>
           </div>
-          <div><input id="cabFileInput" type="file" accept="image/*" capture="environment"></div>
           <img id="cabThumb" class="thumb" alt="cabinet photo preview" />
         </div>
       </div>
+      
       <div style="margin-top:12px">
         <button type="submit" class="btn-secondary">💾 Save Data (Local)</button>
         <button type="button" id="syncBtn">☁️ Sync to Google Sheets</button>
@@ -152,6 +164,19 @@
   </div>
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCEbZ6ngbl3oY8aBdXWGVoG2VTTNWwEi6KskawmpCq21Y_uctAWkoFkr3tee6oCJo5JA/exec';
+
+const municipalities = {
+  "Cavite": [
+    "Alfonso", "Amadeo", "Bacoor", "Carmona", "Cavite City", "Dasmariñas", "General Emilio Aguinaldo",
+    "General Mariano Alvarez", "General Trias", "Imus", "Indang", "Kawit", "Magallanes", "Maragondon",
+    "Mendez", "Naic", "Noveleta", "Rosario", "Silang", "Tagaytay", "Tanza", "Ternate", "Trece Martires"
+  ],
+  "Bulacan": [
+    "Angat", "Balagtas", "Baliuag", "Bocaue", "Bulakan", "Bustos", "Calumpit", "Doña Remedios Trinidad",
+    "Guiguinto", "Hagonoy", "Malolos", "Marilao", "Meycauayan", "Norzagaray", "Obando", "Pandi",
+    "Paombong", "Plaridel", "Pulilan", "San Ildefonso", "San Jose del Monte", "San Miguel", "San Rafael", "Santa Maria"
+  ]
+};
 
 const brandStores = {
   "Selecta":[
@@ -179,6 +204,8 @@ const productsList = {
 };
 
 const onlineStatus = document.getElementById('onlineStatus');
+const areaEl = document.getElementById('area');
+const municipalityEl = document.getElementById('municipality');
 const brandEl = document.getElementById('brand');
 const storeNameEl = document.getElementById('storeName');
 const productsContainer = document.getElementById('productsContainer');
@@ -188,11 +215,12 @@ const dataList = document.getElementById('dataList');
 const entryCount = document.getElementById('entryCount');
 const syncBtn = document.getElementById('syncBtn');
 const clearLocalBtn = document.getElementById('clearLocalBtn');
+
 let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries') || '[]');
 
 const storeVideo = document.getElementById('storeVideo'), storeCanvas = document.getElementById('storeCanvas'), storeThumb = document.getElementById('storeThumb');
 const cabVideo = document.getElementById('cabVideo'), cabCanvas = document.getElementById('cabCanvas'), cabThumb = document.getElementById('cabThumb');
-const storeFileInput = document.getElementById('storeFileInput'), cabFileInput = document.getElementById('cabFileInput');
+
 let storeStream = null, cabStream = null;
 let storeDataURL = "", cabDataURL = "";
 
@@ -212,16 +240,29 @@ function displayStatus(msg, type) {
   setTimeout(()=>{ statusMessage.textContent = ''; statusMessage.className = 'status'; }, 6000);
 }
 
+// Area change handler - populate municipalities
+areaEl.addEventListener('change', () => {
+  const area = areaEl.value;
+  municipalityEl.innerHTML = '<option value="">Select Municipality</option>';
+  if (!area) return;
+  
+  const munis = municipalities[area] || [];
+  munis.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    municipalityEl.appendChild(opt);
+  });
+});
+
 brandEl.addEventListener('change', () => {
   const b = brandEl.value;
   storeNameEl.innerHTML = '<option value="">Select store</option>';
   productsContainer.innerHTML = '';
   if (!b) return;
   
-  // Handle stores
   let stores = [];
   if (b === 'Both') {
-    // Combine both brands' stores, remove duplicates
     const selectaStores = brandStores['Selecta'] || [];
     const aiceStores = brandStores['Aice'] || [];
     stores = [...new Set([...selectaStores, ...aiceStores])];
@@ -236,7 +277,6 @@ brandEl.addEventListener('change', () => {
     storeNameEl.appendChild(opt);
   });
   
-  // Handle products
   if (b === 'Both') {
     renderProducts('Selecta');
     renderProducts('Aice');
@@ -276,7 +316,6 @@ function renderProducts(brand){
     productsContainer.appendChild(item);
   });
   
-  // Add event listeners to ensure only one checkbox is checked at a time
   document.querySelectorAll('.status-check').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
       if (this.checked) {
@@ -319,22 +358,6 @@ document.getElementById('storeCaptureBtn').addEventListener('click', () => { if 
 document.getElementById('cabStartBtn').addEventListener('click', async () => { if (!cabStream) cabStream = await startCameraFor(cabVideo); });
 document.getElementById('cabCaptureBtn').addEventListener('click', () => { if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas); cabThumb.src = cabDataURL || ''; });
 
-storeFileInput.addEventListener('change', (ev) => {
-  const f = ev.target.files && ev.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { storeDataURL = r.result; storeThumb.src = storeDataURL; };
-  r.readAsDataURL(f);
-});
-
-cabFileInput.addEventListener('change', (ev) => {
-  const f = ev.target.files && ev.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = () => { cabDataURL = r.result; cabThumb.src = cabDataURL; };
-  r.readAsDataURL(f);
-});
-
 surveyForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const entry = buildEntryFromForm();
@@ -348,21 +371,21 @@ surveyForm.addEventListener('submit', (e) => {
 });
 
 function buildEntryFromForm(){
-  const name = document.getElementById('name').value;
-  const age = document.getElementById('age').value;
-  const gender = document.getElementById('gender').value;
+  const auditorName = document.getElementById('auditorName').value;
+  const area = areaEl.value;
+  const municipality = municipalityEl.value;
+  const barangay = document.getElementById('barangay').value;
   const brand = brandEl.value;
   const storeName = storeNameEl.value;
   const timestamp = new Date().toISOString();
   const productEntries = [];
   
   document.querySelectorAll('.product-item').forEach(item => {
-    const header = item.querySelector('.product-header').textContent.split('(')[0].trim(); // Remove brand label
+    const header = item.querySelector('.product-header').textContent.split('(')[0].trim();
     const priceInput = item.querySelector('.price-input');
     const price = priceInput.value || '';
-    const productBrand = priceInput.dataset.brand || brand; // Get the actual brand of this product
+    const productBrand = priceInput.dataset.brand || brand;
     
-    // Check which status is selected
     const availableCheck = item.querySelector('.status-check[data-status="available"]');
     const notAvailCheck = item.querySelector('.status-check[data-status="notavailable"]');
     const notCarriedCheck = item.querySelector('.status-check[data-status="notcarried"]');
@@ -377,7 +400,7 @@ function buildEntryFromForm(){
     }
   });
   
-  return { name, age, gender, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
+  return { auditorName, area, municipality, barangay, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
 }
 
 function renderLocalList(){
@@ -390,7 +413,7 @@ function renderLocalList(){
   offlineEntries.forEach((entry, idx) => {
     const li = document.createElement('li');
     li.style.padding = '8px'; li.style.marginBottom = '6px'; li.style.background='#eef';
-    li.innerHTML = `<strong>${entry.name}</strong> — ${entry.age} — ${entry.brand} — ${entry.storeName}
+    li.innerHTML = `<strong>${entry.auditorName}</strong> — ${entry.area} — ${entry.municipality} — ${entry.brand} — ${entry.storeName}
       <div style="margin-top:4px">
         <button data-idx="${idx}" class="delBtn" style="background:#dc3545;color:#fff;border:0;padding:6px;border-radius:6px">Delete</button>
       </div>`;
