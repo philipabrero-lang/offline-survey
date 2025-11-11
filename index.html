@@ -13,17 +13,77 @@
     input[type=text], input[type=number], select, textarea{width:100%;padding:10px;margin-top:6px;border:1px solid #ddd;border-radius:4px;box-sizing:border-box}
     button{margin-top:12px;padding:10px 14px;border-radius:6px;border:0;background:#007bff;color:#fff;cursor:pointer}
     .btn-secondary{background:#28a745}
-    .inline{display:flex;gap:8px;align-items:center}
-    .products-grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:8px;margin-top:8px}
-    .product-item{background:#f8f9fa;padding:10px;border-radius:6px;display:flex;gap:8px;align-items:center;justify-content:space-between}
-    .small{width:110px}
+    
+    /* NEW PRODUCT LAYOUT STYLES */
+    .products-grid{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+    .product-item{
+      background:#f8f9fa;
+      padding:12px;
+      border-radius:6px;
+      border:1px solid #dee2e6;
+    }
+    .product-header{
+      font-weight:600;
+      margin-bottom:8px;
+      font-size:14px;
+      color:#333;
+    }
+    .product-controls{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .status-group{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      flex:1;
+      min-width:300px;
+    }
+    .status-option{
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    .status-option input[type="checkbox"]{
+      width:18px;
+      height:18px;
+      margin:0;
+    }
+    .status-option label{
+      margin:0;
+      font-weight:400;
+      font-size:13px;
+      cursor:pointer;
+    }
+    .price-group{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .price-group label{
+      margin:0;
+      font-weight:400;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .price-input{
+      width:120px;
+      padding:6px 8px;
+      border:1px solid #ced4da;
+      border-radius:4px;
+      font-size:14px;
+    }
+    
     .thumb{max-width:220px;max-height:160px;border:1px solid #ddd;border-radius:6px;margin-top:8px}
     .status{margin-top:10px;padding:10px;border-radius:6px}
     .success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
     .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
     h2{margin-top:18px}
-    .camera-wrap{display:flex;gap:24px;flex-wrap:wrap}
-    video{width:320px;height:240px;border:1px solid #ddd;border-radius:6px;background:#000}
+    .camera-wrap{display:block;}
+    .camera-wrap > div{margin-bottom:24px;}
+    video{width:100%;max-width:320px;height:240px;border:1px solid #ddd;border-radius:6px;background:#000}
     canvas{display:none}
     ul{padding-left:18px}
   </style>
@@ -31,16 +91,12 @@
 <body>
   <div class="container">
     <h1>📋 Offline Survey Form</h1>
-
     <div id="onlineStatus" class="status"></div>
-
     <form id="surveyForm">
       <label>Name</label>
       <input id="name" type="text" required />
-
       <label>Age</label>
       <input id="age" type="number" min="1" max="150" required />
-
       <label>Gender</label>
       <select id="gender" required>
         <option value="">Select</option>
@@ -48,22 +104,18 @@
         <option>Female</option>
         <option>Other</option>
       </select>
-
       <label>What Brand</label>
       <select id="brand" required>
         <option value="">Select Brand</option>
         <option value="Selecta">Selecta</option>
         <option value="Aice">Aice</option>
       </select>
-
       <label>Store Name</label>
       <select id="storeName" required>
         <option value="">Select store</option>
       </select>
-
       <h2>Q2. Is the product available? (check and add price)</h2>
       <div id="productsContainer" class="products-grid"></div>
-
       <h2>Store Photo</h2>
       <div class="camera-wrap">
         <div>
@@ -76,7 +128,6 @@
           <div><input id="storeFileInput" type="file" accept="image/*" capture="environment"></div>
           <img id="storeThumb" class="thumb" alt="store photo preview" />
         </div>
-
         <div>
           <h3>Cabinet Photo</h3>
           <video id="cabVideo" autoplay playsinline></video>
@@ -89,27 +140,19 @@
           <img id="cabThumb" class="thumb" alt="cabinet photo preview" />
         </div>
       </div>
-
       <div style="margin-top:12px">
         <button type="submit" class="btn-secondary">💾 Save Data (Local)</button>
         <button type="button" id="syncBtn">☁️ Sync to Google Sheets</button>
       </div>
     </form>
-
     <div id="statusMessage" class="status"></div>
-
     <h2>Locally Saved Data (<span id="entryCount">0</span>)</h2>
     <ul id="dataList"></ul>
     <button id="clearLocalBtn" style="background:#6c757d;color:#fff;border:0;padding:10px;border-radius:6px">Clear Local Data</button>
   </div>
-
 <script>
-/* ========== CONFIG ========== */
-/* NEW Web App URL provided by you */
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCEbZ6ngbl3oY8aBdXWGVoG2VTTNWwEi6KskawmpCq21Y_uctAWkoFkr3tee6oCJo5JA/exec';
-/* ========== END CONFIG ========== */
 
-/* Data lists (brand -> stores & products) */
 const brandStores = {
   "Selecta":[
     "R-JAY STORE","AZORES EASTERY","CJ and AJ STORE","CAI VARIETY STORE","DRC SCHOOL SUPPLIES",
@@ -135,7 +178,6 @@ const productsList = {
   ]
 };
 
-/* UI elements */
 const onlineStatus = document.getElementById('onlineStatus');
 const brandEl = document.getElementById('brand');
 const storeNameEl = document.getElementById('storeName');
@@ -146,18 +188,14 @@ const dataList = document.getElementById('dataList');
 const entryCount = document.getElementById('entryCount');
 const syncBtn = document.getElementById('syncBtn');
 const clearLocalBtn = document.getElementById('clearLocalBtn');
-
 let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries') || '[]');
 
-/* Camera elements */
 const storeVideo = document.getElementById('storeVideo'), storeCanvas = document.getElementById('storeCanvas'), storeThumb = document.getElementById('storeThumb');
 const cabVideo = document.getElementById('cabVideo'), cabCanvas = document.getElementById('cabCanvas'), cabThumb = document.getElementById('cabThumb');
 const storeFileInput = document.getElementById('storeFileInput'), cabFileInput = document.getElementById('cabFileInput');
-
 let storeStream = null, cabStream = null;
 let storeDataURL = "", cabDataURL = "";
 
-/* Helpers */
 function updateOnlineStatus() {
   if (navigator.onLine){
     onlineStatus.textContent = '🟢 Online - You can sync data to Google Sheets';
@@ -167,13 +205,13 @@ function updateOnlineStatus() {
     onlineStatus.className = 'status error';
   }
 }
+
 function displayStatus(msg, type) {
   statusMessage.textContent = msg;
   statusMessage.className = 'status ' + (type || '');
   setTimeout(()=>{ statusMessage.textContent = ''; statusMessage.className = 'status'; }, 6000);
 }
 
-/* Populate stores when brand changes */
 brandEl.addEventListener('change', () => {
   const b = brandEl.value;
   storeNameEl.innerHTML = '<option value="">Select store</option>';
@@ -189,18 +227,47 @@ function renderProducts(brand){
   productsContainer.innerHTML = '';
   const list = productsList[brand] || [];
   list.forEach((p) => {
-    const item = document.createElement('div'); item.className='product-item';
+    const item = document.createElement('div');
+    item.className = 'product-item';
     item.innerHTML = `
-      <div style="flex:1"><label><input type="checkbox" class="prod-check" data-key="${p}"> ${p}</label></div>
-      <div style="width:150px;display:flex;gap:6px;align-items:center">
-        <input class="prod-price small" data-key="${p}" type="number" step="0.01" placeholder="price" />
+      <div class="product-header">${p}</div>
+      <div class="product-controls">
+        <div class="status-group">
+          <div class="status-option">
+            <input type="checkbox" id="available_${p}" class="status-check" data-key="${p}" data-status="available">
+            <label for="available_${p}">Available</label>
+          </div>
+          <div class="status-option">
+            <input type="checkbox" id="notavail_${p}" class="status-check" data-key="${p}" data-status="notavailable">
+            <label for="notavail_${p}">Not Available</label>
+          </div>
+          <div class="status-option">
+            <input type="checkbox" id="notcarried_${p}" class="status-check" data-key="${p}" data-status="notcarried">
+            <label for="notcarried_${p}">Not Carried</label>
+          </div>
+        </div>
+        <div class="price-group">
+          <label>Price:</label>
+          <input class="price-input" data-key="${p}" type="number" step="0.01" placeholder="0.00" />
+        </div>
       </div>
     `;
     productsContainer.appendChild(item);
   });
+  
+  // Add event listeners to ensure only one checkbox is checked at a time
+  document.querySelectorAll('.status-check').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        const key = this.dataset.key;
+        document.querySelectorAll(`.status-check[data-key="${key}"]`).forEach(cb => {
+          if (cb !== this) cb.checked = false;
+        });
+      }
+    });
+  });
 }
 
-/* Camera functions */
 async function startCameraFor(videoEl){
   try{
     const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
@@ -211,6 +278,7 @@ async function startCameraFor(videoEl){
     return null;
   }
 }
+
 function captureFromVideo(videoEl, canvasEl, maxWidth=1024){
   const vw = videoEl.videoWidth || 1280;
   const vh = videoEl.videoHeight || 720;
@@ -224,14 +292,11 @@ function captureFromVideo(videoEl, canvasEl, maxWidth=1024){
   return canvasEl.toDataURL('image/jpeg', 0.75);
 }
 
-/* wire camera UI */
 document.getElementById('storeStartBtn').addEventListener('click', async () => { if (!storeStream) storeStream = await startCameraFor(storeVideo); });
 document.getElementById('storeCaptureBtn').addEventListener('click', () => { if (storeVideo.srcObject) storeDataURL = captureFromVideo(storeVideo, storeCanvas); storeThumb.src = storeDataURL || ''; });
-
 document.getElementById('cabStartBtn').addEventListener('click', async () => { if (!cabStream) cabStream = await startCameraFor(cabVideo); });
 document.getElementById('cabCaptureBtn').addEventListener('click', () => { if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas); cabThumb.src = cabDataURL || ''; });
 
-/* file input fallback */
 storeFileInput.addEventListener('change', (ev) => {
   const f = ev.target.files && ev.target.files[0];
   if (!f) return;
@@ -239,6 +304,7 @@ storeFileInput.addEventListener('change', (ev) => {
   r.onload = () => { storeDataURL = r.result; storeThumb.src = storeDataURL; };
   r.readAsDataURL(f);
 });
+
 cabFileInput.addEventListener('change', (ev) => {
   const f = ev.target.files && ev.target.files[0];
   if (!f) return;
@@ -247,7 +313,6 @@ cabFileInput.addEventListener('change', (ev) => {
   r.readAsDataURL(f);
 });
 
-/* Save locally */
 surveyForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const entry = buildEntryFromForm();
@@ -260,7 +325,6 @@ surveyForm.addEventListener('submit', (e) => {
   productsContainer.innerHTML='';
 });
 
-/* Build entry: only checked products with price! */
 function buildEntryFromForm(){
   const name = document.getElementById('name').value;
   const age = document.getElementById('age').value;
@@ -269,19 +333,30 @@ function buildEntryFromForm(){
   const storeName = storeNameEl.value;
   const timestamp = new Date().toISOString();
   const productEntries = [];
+  
   document.querySelectorAll('.product-item').forEach(item => {
-    const key = item.querySelector('.prod-check').dataset.key;
-    const checked = item.querySelector('.prod-check').checked;
-    const priceEl = item.querySelector('.prod-price');
-    const price = priceEl.value || '';
-    if (checked) { // Only push checked items!
-      productEntries.push({ product: key, price: price });
+    const header = item.querySelector('.product-header').textContent;
+    const priceInput = item.querySelector('.price-input');
+    const price = priceInput.value || '';
+    
+    // Check which status is selected
+    const availableCheck = item.querySelector('.status-check[data-status="available"]');
+    const notAvailCheck = item.querySelector('.status-check[data-status="notavailable"]');
+    const notCarriedCheck = item.querySelector('.status-check[data-status="notcarried"]');
+    
+    let status = '';
+    if (availableCheck && availableCheck.checked) status = 'Available';
+    else if (notAvailCheck && notAvailCheck.checked) status = 'Not Available';
+    else if (notCarriedCheck && notCarriedCheck.checked) status = 'Not Carried';
+    
+    if (status) {
+      productEntries.push({ product: header, status: status, price: price });
     }
   });
+  
   return { name, age, gender, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
 }
 
-/* Display local list */
 function renderLocalList(){
   dataList.innerHTML = '';
   entryCount.textContent = offlineEntries.length;
@@ -299,6 +374,7 @@ function renderLocalList(){
     dataList.appendChild(li);
   });
 }
+
 dataList.addEventListener('click', (e) => {
   if (e.target.classList.contains('delBtn')) {
     const idx = parseInt(e.target.dataset.idx);
@@ -308,14 +384,12 @@ dataList.addEventListener('click', (e) => {
     displayStatus('Entry deleted', 'info');
   }
 });
+
 clearLocalBtn.addEventListener('click', () => {
   if (!confirm('Clear all local entries?')) return;
   offlineEntries = []; localStorage.removeItem('offlineEntries'); renderLocalList(); displayStatus('Cleared', 'info');
 });
 
-/* Sync logic (send JSON payload to Apps Script)
-   Note: DO NOT set custom headers to avoid preflight OPTIONS in many environments.
-*/
 syncBtn.addEventListener('click', async () => {
   if (offlineEntries.length === 0) { displayStatus('No offline data to sync', 'error'); return; }
   if (!navigator.onLine) { displayStatus('Offline — connect to internet to sync', 'error'); return; }
@@ -324,15 +398,12 @@ syncBtn.addEventListener('click', async () => {
   const successful = [], failed = [];
   for (const entry of offlineEntries) {
     try {
-      // compress large images further if present (already resized on capture)
-      // Send raw JSON string WITHOUT setting Content-Type header (helps avoid preflight in many cases)
       const resp = await fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify(entry)
       });
       const text = await resp.text();
       console.log('SYNC RESPONSE', resp.status, text);
-      // try parse
       let json = null;
       try{ json = JSON.parse(text); }catch(e){ json = { ok: resp.ok, raw: text }; }
       if (resp.ok) {
@@ -341,7 +412,7 @@ syncBtn.addEventListener('click', async () => {
         failed.push(entry);
         console.warn('sync error', resp.status, text);
       }
-      await new Promise(r => setTimeout(r, 350)); // slight delay
+      await new Promise(r => setTimeout(r, 350));
     } catch (err) {
       console.error('sync exception', err);
       failed.push(entry);
@@ -355,7 +426,6 @@ syncBtn.addEventListener('click', async () => {
   syncBtn.disabled = false;
 });
 
-/* init */
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
