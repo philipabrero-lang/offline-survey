@@ -105,10 +105,10 @@
       </select>
       <label>What Ice Cream cabinet is available?</label>
       <select id="brand" required>
-        <option value="">Select Brand</option>
+        <option value="">Select</option>
         <option value="Selecta">Selecta</option>
         <option value="Aice">Aice</option>
-        <option value="Aice">Both</option>
+        <option value="Both">Both</option>
       </select>
       <label>Store Name</label>
       <select id="storeName" required>
@@ -217,38 +217,59 @@ brandEl.addEventListener('change', () => {
   storeNameEl.innerHTML = '<option value="">Select store</option>';
   productsContainer.innerHTML = '';
   if (!b) return;
-  (brandStores[b] || []).forEach(s => {
-    const opt = document.createElement('option'); opt.value = s; opt.textContent = s; storeNameEl.appendChild(opt);
+  
+  // Handle stores
+  let stores = [];
+  if (b === 'Both') {
+    // Combine both brands' stores, remove duplicates
+    const selectaStores = brandStores['Selecta'] || [];
+    const aiceStores = brandStores['Aice'] || [];
+    stores = [...new Set([...selectaStores, ...aiceStores])];
+  } else {
+    stores = brandStores[b] || [];
+  }
+  
+  stores.forEach(s => {
+    const opt = document.createElement('option'); 
+    opt.value = s; 
+    opt.textContent = s; 
+    storeNameEl.appendChild(opt);
   });
-  renderProducts(b);
+  
+  // Handle products
+  if (b === 'Both') {
+    renderProducts('Selecta');
+    renderProducts('Aice');
+  } else {
+    renderProducts(b);
+  }
 });
 
 function renderProducts(brand){
-  productsContainer.innerHTML = '';
   const list = productsList[brand] || [];
   list.forEach((p) => {
     const item = document.createElement('div');
     item.className = 'product-item';
     item.innerHTML = `
-      <div class="product-header">${p}</div>
+      <div class="product-header">${p} <span style="font-size:11px;color:#666;">(${brand})</span></div>
       <div class="product-controls">
         <div class="status-group">
           <div class="status-option">
-            <input type="checkbox" id="available_${p}" class="status-check" data-key="${p}" data-status="available">
-            <label for="available_${p}">Available</label>
+            <input type="checkbox" id="available_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="available">
+            <label for="available_${brand}_${p}">Available</label>
           </div>
           <div class="status-option">
-            <input type="checkbox" id="notavail_${p}" class="status-check" data-key="${p}" data-status="notavailable">
-            <label for="notavail_${p}">Not Available</label>
+            <input type="checkbox" id="notavail_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notavailable">
+            <label for="notavail_${brand}_${p}">Not Available</label>
           </div>
           <div class="status-option">
-            <input type="checkbox" id="notcarried_${p}" class="status-check" data-key="${p}" data-status="notcarried">
-            <label for="notcarried_${p}">Not Carried</label>
+            <input type="checkbox" id="notcarried_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notcarried">
+            <label for="notcarried_${brand}_${p}">Not Carried</label>
           </div>
         </div>
         <div class="price-group">
           <label>Price:</label>
-          <input class="price-input" data-key="${p}" type="number" step="0.01" placeholder="0.00" />
+          <input class="price-input" data-key="${p}" data-brand="${brand}" type="number" step="0.01" placeholder="0.00" />
         </div>
       </div>
     `;
@@ -260,7 +281,8 @@ function renderProducts(brand){
     checkbox.addEventListener('change', function() {
       if (this.checked) {
         const key = this.dataset.key;
-        document.querySelectorAll(`.status-check[data-key="${key}"]`).forEach(cb => {
+        const brand = this.dataset.brand;
+        document.querySelectorAll(`.status-check[data-key="${key}"][data-brand="${brand}"]`).forEach(cb => {
           if (cb !== this) cb.checked = false;
         });
       }
@@ -335,9 +357,10 @@ function buildEntryFromForm(){
   const productEntries = [];
   
   document.querySelectorAll('.product-item').forEach(item => {
-    const header = item.querySelector('.product-header').textContent;
+    const header = item.querySelector('.product-header').textContent.split('(')[0].trim(); // Remove brand label
     const priceInput = item.querySelector('.price-input');
     const price = priceInput.value || '';
+    const productBrand = priceInput.dataset.brand || brand; // Get the actual brand of this product
     
     // Check which status is selected
     const availableCheck = item.querySelector('.status-check[data-status="available"]');
@@ -350,7 +373,7 @@ function buildEntryFromForm(){
     else if (notCarriedCheck && notCarriedCheck.checked) status = 'Not Carried';
     
     if (status) {
-      productEntries.push({ product: header, status: status, price: price });
+      productEntries.push({ product: header, brand: productBrand, status: status, price: price });
     }
   });
   
@@ -433,4 +456,3 @@ renderLocalList();
 </script>
 </body>
 </html>
-
