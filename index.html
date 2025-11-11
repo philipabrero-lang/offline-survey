@@ -79,6 +79,7 @@
     .status{margin-top:10px;padding:10px;border-radius:6px}
     .success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
     .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
     h2{margin-top:18px}
     .camera-wrap{display:block;}
     .camera-wrap > div{margin-bottom:24px;}
@@ -104,31 +105,7 @@
       
       <label>Municipality</label>
       <select id="municipality" required>
-        <option value="">SJDM</option>
-        <option value="">SANTA MARIA</option>
-        <option value="">MALOLOS</option>
-        <option value="">MARILAO</option>
-        <option value="">MEYCAUAYAN</option>
-        <option value="">SAN MIGUEL</option>
-        <option value="">BALIWAG</option>
-        <option value="">PANDI</option>
-        <option value="">BOCAUE</option>
-        <option value="">NORZAGARAY</option>
-        <option value="">HAGONOY</option>
-        <option value="">CALUMPIT</option>
-        <option value="">SAN ILDEFONSO</option>
-        <option value="">PLARIDEL</option>
-        <option value="">GUIGUINTO</option>
-        <option value="">DASMA</option>
-        <option value="">BACOOR</option>
-        <option value="">GENERAL TRIAS</option>
-        <option value="">IMUS</option>
-        <option value="">TANZA</option>
-        <option value="">SILANG</option>
-        <option value="">TRECE</option>
-        <option value="">GEN MARIANO</option>
-        <option value="">NAIC</option>
-        <option value="">KAWIT</option>
+        <option value="">Select Municipality</option>
       </select>
       
       <label>Barangay</label>
@@ -143,6 +120,7 @@
             <button type="button" id="storeStartBtn">Start Camera</button>
             <button type="button" id="storeCaptureBtn">Capture</button>
           </div>
+          <div><input id="storeFileInput" type="file" accept="image/*" capture="environment"></div>
           <img id="storeThumb" class="thumb" alt="store photo preview" />
         </div>
       </div>
@@ -160,24 +138,22 @@
         <option value="">Select store</option>
       </select>
 
-
-
       <label>Type of Store</label>
-      <select id="TypeStore" required>
-        <option value="">Bakery</option>
-        <option value="">Carinderia inside palengke</option>
-        <option value="">Eatery/Carinderia</option>
-        <option value="">Grocery or wholesaler inside palengke</option>
-        <option value="">Sari-sari store</option>
-        <option value="">Wala sa nabanggit</option>
+      <select id="typeStore" required>
+        <option value="">Select Type</option>
+        <option value="Bakery">Bakery</option>
+        <option value="Carinderia inside palengke">Carinderia inside palengke</option>
+        <option value="Eatery/Carinderia">Eatery/Carinderia</option>
+        <option value="Grocery or wholesaler inside palengke">Grocery or wholesaler inside palengke</option>
+        <option value="Sari-sari store">Sari-sari store</option>
+        <option value="Wala sa nabanggit">Wala sa nabanggit</option>
       </select>
-
       
       <h2>Is the product available? (check and add price)</h2>
       <div id="productsContainer" class="products-grid"></div>
 
       <label>Ilan ang cabinet sa loob ng tindahan?</label>
-      <input id="CountCabinet" type="text" required />
+      <input id="countCabinet" type="number" min="0" required />
       
       <h2>Take a picture of the freezer</h2>
       <div class="camera-wrap">
@@ -188,6 +164,7 @@
             <button type="button" id="cabStartBtn">Start Camera</button>
             <button type="button" id="cabCaptureBtn">Capture</button>
           </div>
+          <div><input id="cabFileInput" type="file" accept="image/*" capture="environment"></div>
           <img id="cabThumb" class="thumb" alt="Picture of the freezer preview" />
         </div>
       </div>
@@ -207,14 +184,13 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCEbZ6ngbl3oY8aBdXW
 
 const municipalities = {
   "Cavite": [
-    "Alfonso", "Amadeo", "Bacoor", "Carmona", "Cavite City", "Dasmariñas", "General Emilio Aguinaldo",
-    "General Mariano Alvarez", "General Trias", "Imus", "Indang", "Kawit", "Magallanes", "Maragondon",
-    "Mendez", "Naic", "Noveleta", "Rosario", "Silang", "Tagaytay", "Tanza", "Ternate", "Trece Martires"
+    "DASMA", "BACOOR", "GENERAL TRIAS", "IMUS", "TANZA", "SILANG", "TRECE", 
+    "GEN MARIANO", "NAIC", "KAWIT"
   ],
   "Bulacan": [
-    "Angat", "Balagtas", "Baliuag", "Bocaue", "Bulakan", "Bustos", "Calumpit", "Doña Remedios Trinidad",
-    "Guiguinto", "Hagonoy", "Malolos", "Marilao", "Meycauayan", "Norzagaray", "Obando", "Pandi",
-    "Paombong", "Plaridel", "Pulilan", "San Ildefonso", "San Jose del Monte", "San Miguel", "San Rafael", "Santa Maria"
+    "SJDM", "SANTA MARIA", "MALOLOS", "MARILAO", "MEYCAUAYAN", "SAN MIGUEL",
+    "BALIWAG", "PANDI", "BOCAUE", "NORZAGARAY", "HAGONOY", "CALUMPIT",
+    "SAN ILDEFONSO", "PLARIDEL", "GUIGUINTO"
   ]
 };
 
@@ -260,9 +236,11 @@ let offlineEntries = JSON.parse(localStorage.getItem('offlineEntries') || '[]');
 
 const storeVideo = document.getElementById('storeVideo'), storeCanvas = document.getElementById('storeCanvas'), storeThumb = document.getElementById('storeThumb');
 const cabVideo = document.getElementById('cabVideo'), cabCanvas = document.getElementById('cabCanvas'), cabThumb = document.getElementById('cabThumb');
+const storeFileInput = document.getElementById('storeFileInput'), cabFileInput = document.getElementById('cabFileInput');
 
 let storeStream = null, cabStream = null;
 let storeDataURL = "", cabDataURL = "";
+let currentLocation = { latitude: '', longitude: '', accuracy: '', timestamp: '' };
 
 function updateOnlineStatus() {
   if (navigator.onLine){
@@ -280,7 +258,41 @@ function displayStatus(msg, type) {
   setTimeout(()=>{ statusMessage.textContent = ''; statusMessage.className = 'status'; }, 6000);
 }
 
-// Area change handler - populate municipalities
+// Get user's current location
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation not supported');
+      resolve({ latitude: '', longitude: '', accuracy: '', timestamp: '', error: 'Not supported' });
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: new Date(position.timestamp).toISOString()
+        };
+        currentLocation = loc;
+        console.log('Location captured:', loc);
+        resolve(loc);
+      },
+      (error) => {
+        console.warn('Location error:', error.message);
+        resolve({ latitude: '', longitude: '', accuracy: '', timestamp: '', error: error.message });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  });
+}
+
+// Area change handler
 areaEl.addEventListener('change', () => {
   const area = areaEl.value;
   municipalityEl.innerHTML = '<option value="">Select Municipality</option>';
@@ -295,6 +307,7 @@ areaEl.addEventListener('change', () => {
   });
 });
 
+// Brand change handler
 brandEl.addEventListener('change', () => {
   const b = brandEl.value;
   storeNameEl.innerHTML = '<option value="">Select store</option>';
@@ -335,16 +348,16 @@ function renderProducts(brand){
       <div class="product-controls">
         <div class="status-group">
           <div class="status-option">
-            <input type="checkbox" id="available_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="available">
-            <label for="available_${brand}_${p}">Available</label>
+            <input type="checkbox" id="available_${brand}_${p.replace(/\s/g,'_')}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="available">
+            <label for="available_${brand}_${p.replace(/\s/g,'_')}">Available</label>
           </div>
           <div class="status-option">
-            <input type="checkbox" id="notavail_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notavailable">
-            <label for="notavail_${brand}_${p}">Not Available</label>
+            <input type="checkbox" id="notavail_${brand}_${p.replace(/\s/g,'_')}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notavailable">
+            <label for="notavail_${brand}_${p.replace(/\s/g,'_')}">Not Available</label>
           </div>
           <div class="status-option">
-            <input type="checkbox" id="notcarried_${brand}_${p}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notcarried">
-            <label for="notcarried_${brand}_${p}">Not Carried</label>
+            <input type="checkbox" id="notcarried_${brand}_${p.replace(/\s/g,'_')}" class="status-check" data-key="${p}" data-brand="${brand}" data-status="notcarried">
+            <label for="notcarried_${brand}_${p.replace(/\s/g,'_')}">Not Carried</label>
           </div>
         </div>
         <div class="price-group">
@@ -394,16 +407,38 @@ function captureFromVideo(videoEl, canvasEl, maxWidth=1024){
 }
 
 document.getElementById('storeStartBtn').addEventListener('click', async () => { if (!storeStream) storeStream = await startCameraFor(storeVideo); });
-document.getElementById('storeCaptureBtn').addEventListener('click', () => { if (storeVideo.srcObject) storeDataURL = captureFromVideo(storeVideo, storeCanvas); storeThumb.src = storeDataURL || ''; });
+document.getElementById('storeCaptureBtn').addEventListener('click', () => { if (storeVideo.srcObject) { storeDataURL = captureFromVideo(storeVideo, storeCanvas); storeThumb.src = storeDataURL || ''; } });
 document.getElementById('cabStartBtn').addEventListener('click', async () => { if (!cabStream) cabStream = await startCameraFor(cabVideo); });
-document.getElementById('cabCaptureBtn').addEventListener('click', () => { if (cabVideo.srcObject) cabDataURL = captureFromVideo(cabVideo, cabCanvas); cabThumb.src = cabDataURL || ''; });
+document.getElementById('cabCaptureBtn').addEventListener('click', () => { if (cabVideo.srcObject) { cabDataURL = captureFromVideo(cabVideo, cabCanvas); cabThumb.src = cabDataURL || ''; } });
 
-surveyForm.addEventListener('submit', (e) => {
+// File input fallback
+storeFileInput.addEventListener('change', (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { storeDataURL = r.result; storeThumb.src = storeDataURL; };
+  r.readAsDataURL(f);
+});
+
+cabFileInput.addEventListener('change', (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { cabDataURL = r.result; cabThumb.src = cabDataURL; };
+  r.readAsDataURL(f);
+});
+
+surveyForm.addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  // Get location before saving
+  displayStatus('📍 Getting your location...', 'info');
+  await getCurrentLocation();
+  
   const entry = buildEntryFromForm();
   offlineEntries.push(entry);
   localStorage.setItem('offlineEntries', JSON.stringify(offlineEntries));
-  displayStatus('✅ Data saved locally', 'success');
+  displayStatus('✅ Data saved locally with location', 'success');
   renderLocalList();
   surveyForm.reset();
   storeThumb.src=''; cabThumb.src=''; storeDataURL=''; cabDataURL='';
@@ -417,6 +452,8 @@ function buildEntryFromForm(){
   const barangay = document.getElementById('barangay').value;
   const brand = brandEl.value;
   const storeName = storeNameEl.value;
+  const typeStore = document.getElementById('typeStore').value;
+  const countCabinet = document.getElementById('countCabinet').value;
   const timestamp = new Date().toISOString();
   const productEntries = [];
   
@@ -440,7 +477,21 @@ function buildEntryFromForm(){
     }
   });
   
-  return { auditorName, area, municipality, barangay, timestamp, brand, storeName, products: productEntries, storePhoto: storeDataURL, cabinetPhoto: cabDataURL };
+  return { 
+    auditorName, 
+    area, 
+    municipality, 
+    barangay, 
+    timestamp, 
+    brand, 
+    storeName, 
+    typeStore,
+    countCabinet,
+    products: productEntries, 
+    storePhoto: storeDataURL, 
+    cabinetPhoto: cabDataURL,
+    location: currentLocation
+  };
 }
 
 function renderLocalList(){
@@ -453,7 +504,8 @@ function renderLocalList(){
   offlineEntries.forEach((entry, idx) => {
     const li = document.createElement('li');
     li.style.padding = '8px'; li.style.marginBottom = '6px'; li.style.background='#eef';
-    li.innerHTML = `<strong>${entry.auditorName}</strong> — ${entry.area} — ${entry.municipality} — ${entry.brand} — ${entry.storeName}
+    const locInfo = entry.location && entry.location.latitude ? `📍 ${entry.location.latitude.toFixed(4)}, ${entry.location.longitude.toFixed(4)}` : '📍 No location';
+    li.innerHTML = `<strong>${entry.auditorName}</strong> — ${entry.area} — ${entry.municipality} — ${entry.brand} — ${entry.storeName} — ${locInfo}
       <div style="margin-top:4px">
         <button data-idx="${idx}" class="delBtn" style="background:#dc3545;color:#fff;border:0;padding:6px;border-radius:6px">Delete</button>
       </div>`;
@@ -516,11 +568,11 @@ window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 updateOnlineStatus();
 renderLocalList();
+
+// Get initial location on page load
+getCurrentLocation().then(loc => {
+  console.log('Initial location obtained:', loc);
+});
 </script>
 </body>
 </html>
-
-
-
-
-
